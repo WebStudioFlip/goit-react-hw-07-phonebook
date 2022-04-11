@@ -1,17 +1,24 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useSelector, shallowEqual, useDispatch } from 'react-redux';
 import ContactForm from '../ContactForm';
 import ContactList from '../ContactList';
 import Filter from '../Filter';
 import Section from '../../shared/Section';
-import { actions } from '../redux/contacts/contacts-slice';
-import { getAllContacts } from '../redux/contacts/contacts-selectors';
+import operations from '../redux/contacts/contacts-operations';
+import { getAllContacts, getContactsLoading } from '../redux/contacts/contacts-selectors';
 
 const Phonebook = () => {
     
     const contacts = useSelector(getAllContacts, shallowEqual);
-    const dispatch = useDispatch();
+    const loading = useSelector(getContactsLoading, shallowEqual);
 console.log(contacts)
+    const dispatch = useDispatch();
+
+    useEffect(() => {
+      const getContacts = () => dispatch(operations.fetchContacts());
+      getContacts();
+    }, [dispatch]);
+
   const [filter, setFilter] = useState('');  
   
     const addContact = useCallback( payload => {        
@@ -21,8 +28,8 @@ console.log(contacts)
         el => el.name.toLowerCase() === name.toLowerCase()
       )
     ) {        
-            const action = actions.add(payload);
-            dispatch(action);         
+            const action = operations.addContact(payload);
+            dispatch(action);                 
     } else {
       alert(`${name} is already in contacts`);
     }
@@ -43,7 +50,7 @@ console.log(contacts)
   }, []);
 
   const removeContact = id => {
-    dispatch(actions.remove(id))
+    dispatch(operations.removeContact(id));
   };
 
   
@@ -69,6 +76,7 @@ console.log(contacts)
             filterContacts={handleSearch}
             filter={filter}
           />
+          {loading && <p>...Loading</p>}
           <ContactList
             contacts={getFilteredContacts()}
             removeContact={removeContact}
